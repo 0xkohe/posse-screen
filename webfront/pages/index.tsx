@@ -22,6 +22,7 @@ import {
   orderBy,
 } from "firebase/firestore";
 import app from "../lib/firebase";
+import { useRouter } from "next/router";
 
 const db = getFirestore(app);
 
@@ -34,7 +35,8 @@ type ChatType = {
 };
 
 const Home = (props: ContainerProps) => {
-  const [roomname, setRoomname] = useState<string>("testroom");
+  const router = useRouter();
+  const [roomname, setRoomname] = useState<string>("");
   const [newChat, setNewChat] = useState<ChatType>({
     userName: "",
     message: "",
@@ -65,16 +67,14 @@ const Home = (props: ContainerProps) => {
   };
 
   useEffect(() => {
-    let tempRoomName = "";
-    while (tempRoomName == "") {
-      tempRoomName = prompt("ルーム名を入力してください。") || "";
-      if (tempRoomName == "") {
-        continue;
-      }
-      setRoomname(tempRoomName);
+    if (!router.isReady) return;
+    if (!router.query.roomname) {
+      router.push("/?roomname=" + prompt("ルーム名を入力してください。") || "");
+      return;
     }
+    setRoomname(router.query.roomname as string);
     const q = query(
-      collection(db, "rooms", tempRoomName, "chats"),
+      collection(db, "rooms", router.query.roomname as string, "chats"),
       orderBy("datetime")
     );
     onSnapshot(q, (querySnapshot) => {
@@ -91,7 +91,7 @@ const Home = (props: ContainerProps) => {
         console.log("newChat displayed!");
       });
     });
-  }, []);
+  }, [router]);
 
   return (
     <StyledComponent
