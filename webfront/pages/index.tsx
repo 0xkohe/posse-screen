@@ -20,6 +20,7 @@ import {
   doc,
   query,
   orderBy,
+  limit,
 } from "firebase/firestore";
 import app from "../lib/firebase";
 import { useRouter } from "next/router";
@@ -35,6 +36,8 @@ type ChatType = {
 };
 
 const Home = (props: ContainerProps) => {
+  const CHAT_LIMIT = 50;
+
   const router = useRouter();
   const [roomname, setRoomname] = useState<string>("");
   const [newChat, setNewChat] = useState<ChatType>({
@@ -75,18 +78,15 @@ const Home = (props: ContainerProps) => {
     setRoomname(router.query.roomname as string);
     const q = query(
       collection(db, "rooms", router.query.roomname as string, "chats"),
-      orderBy("datetime")
+      orderBy("datetime", "desc"),
+      limit(CHAT_LIMIT)
     );
     onSnapshot(q, (querySnapshot) => {
+      const chats: ChatType[] = [];
       querySnapshot.docChanges().forEach((change) => {
         const data = change.doc.data();
         if (change.type === "added") {
-          let chat: ChatType = {
-            datetime: data.datetime,
-            userName: data.userName,
-            message: data.message,
-          };
-          setNewChat(chat);
+          chats.unshift(change.doc.data() as ChatType);
         }
         console.log("newChat displayed!");
       });
