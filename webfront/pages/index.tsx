@@ -121,14 +121,7 @@ type Props = ContainerProps & {
 const Component = (props: Props) => (
   <Container maxWidth="sm" className={props.className}>
     <Box height="100vh" display="flex" flexDirection="column">
-      <Box
-        flexGrow={1}
-        py={1}
-        overflow="hidden"
-        display="flex"
-        flexDirection="column"
-        justifyContent="flex-end"
-      >
+      <Box flexGrow={1} py={1} overflow={"scroll"}>
         {props.chats.map((chat, index) => (
           <Paper key={index} variant="outlined">
             <Box display="flex" p={1}>
