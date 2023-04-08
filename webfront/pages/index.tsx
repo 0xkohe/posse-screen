@@ -1,4 +1,10 @@
-import React, { useState, useEffect, KeyboardEvent } from "react";
+import React, {
+  useState,
+  useEffect,
+  KeyboardEvent,
+  useRef,
+  RefObject,
+} from "react";
 import styled from "styled-components";
 import dayjs from "dayjs";
 import {
@@ -40,20 +46,10 @@ const Home = (props: ContainerProps) => {
 
   const router = useRouter();
   const [roomname, setRoomname] = useState<string>("");
-  const [newChat, setNewChat] = useState<ChatType>({
-    userName: "",
-    message: "",
-    datetime: "",
-  });
   const [chats, setChats] = useState<ChatType[]>([]);
   const [userName, setUserName] = useState<string>("");
   const [message, setMessage] = useState<string>("");
-
-  useEffect(() => {
-    if (newChat.message) {
-      setChats([...chats, newChat]);
-    }
-  }, [newChat]);
+  const chatListRef = useRef<HTMLDivElement>(null);
 
   const handleSubmit = async () => {
     const datetime = dayjs().format("YYYY-MM-DD HH:mm:ss");
@@ -69,6 +65,7 @@ const Home = (props: ContainerProps) => {
     }
   };
 
+  let cnt = 0;
   useEffect(() => {
     if (!router.isReady) return;
     if (!router.query.roomname) {
@@ -84,12 +81,23 @@ const Home = (props: ContainerProps) => {
     onSnapshot(q, (querySnapshot) => {
       const chats: ChatType[] = [];
       querySnapshot.docChanges().forEach((change) => {
-        const data = change.doc.data();
         if (change.type === "added") {
           chats.unshift(change.doc.data() as ChatType);
         }
-        console.log("newChat displayed!");
       });
+      setChats((prevChats) => [...prevChats, ...chats]);
+      if (chatListRef.current) {
+        const isScrolled =
+          Math.abs(
+            chatListRef.current.scrollHeight -
+              chatListRef.current.clientHeight -
+              chatListRef.current.scrollTop
+          ) < 100;
+        if (cnt === 0 || isScrolled) {
+          chatListRef.current.scrollTop = chatListRef.current.scrollHeight;
+        }
+      }
+      cnt++;
     });
   }, [router]);
 
@@ -99,6 +107,7 @@ const Home = (props: ContainerProps) => {
       chats={chats}
       userName={userName}
       message={message}
+      chatListRef={chatListRef}
       setUserName={setUserName}
       setMessage={setMessage}
       handleSubmit={handleSubmit}
@@ -112,6 +121,7 @@ type Props = ContainerProps & {
   chats: ChatType[];
   userName: string;
   message: string;
+  chatListRef: RefObject<HTMLDivElement>;
   setUserName: (value: string) => void;
   setMessage: (value: string) => void;
   handleSubmit: () => void;
@@ -121,7 +131,7 @@ type Props = ContainerProps & {
 const Component = (props: Props) => (
   <Container maxWidth="sm" className={props.className}>
     <Box height="100dvh" display="flex" flexDirection="column">
-      <Box flexGrow={1} py={1} overflow={"scroll"}>
+      <div className="scroll" ref={props.chatListRef}>
         {props.chats.map((chat, index) => (
           <Paper key={index} variant="outlined">
             <Box display="flex" p={1}>
@@ -134,12 +144,14 @@ const Component = (props: Props) => (
                     {dayjs(chat.datetime).format("MM/DD HH:mm")}
                   </Typography>
                 </Box>
-                <Typography>{chat.message}</Typography>
+                <Box sx={{ whiteSpace: "pre-wrap" }}>
+                  <Typography>{chat.message}</Typography>
+                </Box>
               </Box>
             </Box>
           </Paper>
         ))}
-      </Box>
+      </div>
       <Box border={1} borderRadius={5} borderColor="grey.500" mb={1}>
         <Box px={2}>
           <InputBase
@@ -180,6 +192,11 @@ const StyledComponent = styled(Component)`
   .name {
     font-weight: 700;
     padding-right: 5px;
+  }
+  .scroll {
+    overflow: scroll;
+    padding: 10px 0;
+    margin-top: auto;
   }
 `;
 
