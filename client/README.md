@@ -1,5 +1,6 @@
 # POSSEscreen client
 
+- npm install
 - edit config.ts
 - edit firebase.ts
   - copy json from firebase console
