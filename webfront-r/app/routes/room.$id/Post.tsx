@@ -22,7 +22,7 @@ const Post: React.FC<PostProps> = ({ post }) => {
           </div>
           <div className="ml-2">
             <span className="font-medium text-cyan-300">{post.username}</span>
-            <span className="ml-2 text-xs text-gray-400">ID:{post.id.toString(16).padStart(8, '0')}</span>
+            <span className="ml-2 text-xs text-gray-400">ID:{post.id}</span>
           </div>
         </div>
         <div className="flex items-center">

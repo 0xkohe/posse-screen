@@ -59,7 +59,7 @@ const PostForm: React.FC<PostFormProps> = ({ onSubmit, postCount }) => {
 
     // Create new post object
     const newPostObj: Post = {
-      id: Math.floor(1000 + Math.random() * 9000),
+      id: String(Math.floor(1000 + Math.random() * 9000)),
       number: `${postCount + 1}`,
       username: currentUsername,
       text: newPost,
