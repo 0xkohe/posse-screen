@@ -1,55 +1,29 @@
 import React, { useState, useRef, useEffect } from 'react';
-import type { Post as PostType } from './types';
+import { useParams } from 'react-router';
+import type { Post as PostType, Room, Message } from './types';
 import Post from './Post';
 import Header from './Header';
 import PostForm from './PostForm';
 import Footer from './Footer';
+import { 
+  db, 
+  collection, 
+  doc, 
+  addDoc, 
+  getDocs, 
+  query, 
+  orderBy, 
+  onSnapshot, 
+  serverTimestamp,
+  Timestamp 
+} from '~/lib/firebase';
 
 const CosmicForumPage: React.FC = () => {
-  const [posts, setPosts] = useState<PostType[]>([
-    {
-      id: 1001,
-      number: "1",
-      username: "宇宙飛行士774号",
-      text: "ここが俺たちの新たな星間掲示板か…地球じゃ言えないことをどんどん書き込んでくれ",
-      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24),
-      likes: 42,
-      image: "https://via.placeholder.com/400x200/000020/ffffff?text=宇宙の風景"
-    },
-    {
-      id: 1002,
-      number: "2",
-      username: "惑星開拓者",
-      text: ">>1\n火星移住計画の進捗どうなってる？\n2030年には実現するって噂だけどマジ？",
-      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 12),
-      likes: 15,
-    },
-    {
-      id: 1003,
-      number: "3",
-      username: "銀河系住民",
-      text: "ダークマターって実際どうなん？見えないけど宇宙の8割を占めるとか言われてるけど、お前ら詳しいやついる？\n\n俺の考察だと…",
-      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 6),
-      likes: 38
-    },
-    {
-      id: 1004,
-      number: "4",
-      username: "人工知能2025",
-      text: "量子もつれを利用した星間通信システム開発したわ\nこれで地球に帰らなくても2chできるぞ",
-      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2),
-      likes: 87,
-      image: "https://via.placeholder.com/400x200/000040/00ffff?text=量子通信システム"
-    },
-    {
-      id: 1005,
-      number: "5",
-      username: "ブラックホーラー",
-      text: ">>4\nマジかよ、特許取った？\n\nってかお前らさ、この前ケプラー186fからの電波キャッチしたの知ってる？\nついに宇宙人の痕跡見つかったかもしれんぞ",
-      timestamp: new Date(Date.now() - 1000 * 60 * 30),
-      likes: 63
-    },
-  ]);
+  const { id: roomId } = useParams<{ id: string }>();
+  const [room, setRoom] = useState<Room | null>(null);
+  const [posts, setPosts] = useState<PostType[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
   const postsEndRef = useRef<HTMLDivElement>(null);
 
@@ -59,12 +33,98 @@ const CosmicForumPage: React.FC = () => {
   };
 
   useEffect(() => {
+    if (!roomId) {
+      setError('Room ID is missing');
+      return;
+    }
+
+    // Get room details
+    const roomRef = doc(db, 'rooms', roomId);
+    
+    // Subscribe to room messages
+    const messagesRef = collection(db, 'rooms', roomId, 'messages');
+    const messagesQuery = query(messagesRef, orderBy('createdAt', 'asc'));
+    
+    const unsubscribe = onSnapshot(messagesQuery, (snapshot) => {
+      try {
+        const messagesData = snapshot.docs.map((doc, index) => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            number: (index + 1).toString(),
+            username: data.senderId, // Using senderId as username for now
+            text: data.text,
+            timestamp: data.createdAt instanceof Timestamp ? data.createdAt.toDate() : new Date(),
+            likes: 0, // Initialize likes to 0 since it's not in Firebase schema
+            messageType: data.messageType || 'text',
+            image: data.messageType === 'image' ? data.text : undefined // If message type is image, use text field as image URL
+          };
+        });
+        
+        setPosts(messagesData);
+        setLoading(false);
+      } catch (err) {
+        console.error('Error getting messages:', err);
+        setError('Failed to load messages');
+        setLoading(false);
+      }
+    }, (err) => {
+      console.error('Error in messages snapshot:', err);
+      setError('Failed to subscribe to messages');
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [roomId]);
+
+  useEffect(() => {
     scrollToBottom();
   }, [posts]);
 
-  const handleCreatePost = (newPostObj: PostType) => {
-    setPosts([...posts, newPostObj]);
+  const handleCreatePost = async (newPostObj: PostType) => {
+    if (!roomId) return;
+    
+    try {
+      // Add the message to Firestore
+      await addDoc(collection(db, 'rooms', roomId, 'messages'), {
+        text: newPostObj.text,
+        senderId: newPostObj.username, // Using username as senderId for simplicity
+        createdAt: serverTimestamp(),
+        messageType: newPostObj.image ? 'image' : 'text',
+        ...(newPostObj.image && { imageUrl: newPostObj.image }), // Add image URL if present
+      });
+      
+      // No need to update local state as we're using onSnapshot
+    } catch (err) {
+      console.error('Error adding message:', err);
+      setError('Failed to send message');
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="flex flex-col h-screen bg-gray-950 text-white items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-cyan-300"></div>
+        <p className="mt-4 text-cyan-300">Loading cosmic data...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col h-screen bg-gray-950 text-white items-center justify-center">
+        <div className="bg-red-900/30 p-4 rounded-lg border border-red-500/30 max-w-md">
+          <p className="text-red-300">{error}</p>
+          <button 
+            className="mt-4 px-4 py-2 bg-red-800 text-white rounded hover:bg-red-700"
+            onClick={() => window.location.reload()}
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-screen bg-gray-950 text-white bg-[url('https://via.placeholder.com/100/000015/000015?text=')] bg-repeat">
@@ -95,15 +155,23 @@ const CosmicForumPage: React.FC = () => {
           <div className="mb-6 bg-indigo-900/30 rounded-lg p-4 border border-cyan-800/30">
             <h1 className="text-xl font-bold text-cyan-300 mb-2">【宇宙開発】人類の星間移住計画について語るスレ【第3銀河】</h1>
             <p className="text-gray-300 text-sm">
+              Room ID: {roomId}<br />
               ここは宇宙と2chが融合した新時代の掲示板。<br />
               地球の常識は捨てて、銀河の彼方から好きなことを書き込め。<br />
               <span className="text-cyan-400">※荒らしは虚空に消去されます</span>
             </p>
           </div>
 
-          {posts.map((post) => (
-            <Post key={post.id} post={post} />
-          ))}
+          {posts.length === 0 ? (
+            <div className="text-center p-10 bg-gray-900/30 rounded-lg border border-cyan-800/30">
+              <p className="text-cyan-300">この宇宙板はまだ書き込みがありません。</p>
+              <p className="text-gray-400 mt-2">最初のメッセージを送信してみましょう！</p>
+            </div>
+          ) : (
+            posts.map((post) => (
+              <Post key={post.id} post={post} />
+            ))
+          )}
           <div ref={postsEndRef} />
         </div>
       </div>
