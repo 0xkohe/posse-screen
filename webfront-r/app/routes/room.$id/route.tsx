@@ -1,8 +1,26 @@
 import React, { useState, useRef, useEffect } from 'react';
+import type { KeyboardEvent, ChangeEvent } from 'react';
+
+// Type for post object
+interface Post {
+  id: number;
+  number: string;
+  username: string;
+  text: string;
+  timestamp: Date;
+  likes: number;
+  image?: string; // Optional property
+  avatar?: string; // Optional property for user avatar
+}
+
+// Props for the post component
+interface PostProps {
+  post: Post;
+}
 
 // 投稿コンポーネント - 宇宙×2ch風
-const CosmicPost = ({ post }) => {
-  const [showActions, setShowActions] = useState(false);
+const CosmicPost: React.FC<PostProps> = ({ post }) => {
+  const [showActions, setShowActions] = useState<boolean>(false);
 
   return (
     <div
@@ -89,9 +107,11 @@ const CosmicPost = ({ post }) => {
   );
 };
 
+// We don't need this anymore since we added avatar to the Post interface
+
 // メイン掲示板コンポーネント
-const CosmicForumPage = () => {
-  const [posts, setPosts] = useState([
+const CosmicForumPage: React.FC = () => {
+  const [posts, setPosts] = useState<Post[]>([
     {
       id: 1001,
       number: "1",
@@ -136,15 +156,15 @@ const CosmicForumPage = () => {
     },
   ]);
 
-  const [newPost, setNewPost] = useState('');
-  const [username, setUsername] = useState('');
-  const [showAnonymousOptions, setShowAnonymousOptions] = useState(false);
-  const [selectedFile, setSelectedFile] = useState(null);
-  const [previewImage, setPreviewImage] = useState(null);
+  const [newPost, setNewPost] = useState<string>('');
+  const [username, setUsername] = useState<string>('');
+  const [showAnonymousOptions, setShowAnonymousOptions] = useState<boolean>(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
 
-  const postsEndRef = useRef(null);
-  const inputRef = useRef(null);
-  const fileInputRef = useRef(null);
+  const postsEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // 自動スクロール
   const scrollToBottom = () => {
@@ -173,15 +193,18 @@ const CosmicForumPage = () => {
     setUsername(anonymousNames[Math.floor(Math.random() * anonymousNames.length)]);
   }, []);
 
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
+  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
     if (file) {
       setSelectedFile(file);
 
       // プレビュー用URLを作成
       const reader = new FileReader();
       reader.onloadend = () => {
-        setPreviewImage(reader.result);
+        const result = reader.result;
+        if (typeof result === 'string') {
+          setPreviewImage(result);
+        }
       };
       reader.readAsDataURL(file);
     }
@@ -191,16 +214,16 @@ const CosmicForumPage = () => {
     if (newPost.trim() === '') return;
     const currentUsername = username.trim() === '' ? "宇宙の名無しさん" : username.trim();
 
-
     // 新しい投稿を追加
-    const newPostObj = {
+    const newPostObj: Post = {
       id: Math.floor(1000 + Math.random() * 9000),
       number: `${posts.length + 1}`,
       username: currentUsername,
       text: newPost,
       timestamp: new Date(),
       likes: 0,
-      image: previewImage
+      // Only add image if previewImage exists
+      ...(previewImage && { image: previewImage })
     };
 
     setPosts([...posts, newPostObj]);
@@ -216,8 +239,8 @@ const CosmicForumPage = () => {
     inputRef.current?.focus();
   };
 
-  const handleKeyPress = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey && e.ctrlKey && e.target.id === 'post-content') {
+  const handleKeyPress = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey && e.ctrlKey && e.currentTarget.id === 'post-content') {
       e.preventDefault();
       handleCreatePost();
     }
@@ -259,20 +282,12 @@ const CosmicForumPage = () => {
         </div>
 
         <div className="flex items-center space-x-3 z-10">
-          {/* <button // ルーティングがないため、戻るボタンは一旦コメントアウトまたは削除
-            // onClick={() => {}} // 必要であれば別の動作を割り当てる
-            className="p-2 rounded-full hover:bg-indigo-800/50 transition"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
-            </svg>
-          </button> */}
           <div className="flex items-center">
             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-600 to-cyan-500 flex items-center justify-center overflow-hidden border-2 border-cyan-300/30 animate-pulse">
               <span className="text-lg font-bold">宇</span>
             </div>
             <div className="ml-3">
-              <h2 className="font-bold text-cyan-300 text-lg tracking-wider">宇宙板</h2> {/* threadIdを削除 */}
+              <h2 className="font-bold text-cyan-300 text-lg tracking-wider">宇宙板</h2>
               <div className="flex items-center">
                 <span className="inline-block w-2 h-2 rounded-full bg-green-500 mr-1 animate-pulse"></span>
                 <p className="text-xs text-gray-300">
@@ -363,7 +378,7 @@ const CosmicForumPage = () => {
                         className="w-full bg-gray-700 text-white text-sm rounded px-3 py-1 focus:outline-none focus:ring-1 focus:ring-cyan-500 border border-gray-600"
                         placeholder="宇宙の名無しさん"
                         value={username}
-                        onChange={(e) => setUsername(e.target.value)}
+                        onChange={(e: ChangeEvent<HTMLInputElement>) => setUsername(e.target.value)}
                       />
                       <div className="mt-2 grid grid-cols-2 gap-1">
                         {["宇宙飛行士", "銀河系住民", "火星移住者", "異星人", "ブラックホーラー", "地球脱出民"].map((name) => (
@@ -391,7 +406,7 @@ const CosmicForumPage = () => {
                   className="w-full bg-gray-800 border-b border-cyan-900/30 text-cyan-300 rounded px-3 py-1 focus:outline-none focus:border-cyan-500 text-sm"
                   placeholder="匿名ハンドルネーム"
                   value={username}
-                  onChange={(e) => setUsername(e.target.value)}
+                  onChange={(e: ChangeEvent<HTMLInputElement>) => setUsername(e.target.value)}
                 />
                 <p className="text-xs text-gray-500 mt-1">※任意のハンドルネームを入力（空白で「宇宙の名無しさん」）</p>
               </div>
@@ -405,7 +420,7 @@ const CosmicForumPage = () => {
                 className="w-full bg-gray-800 text-white rounded px-3 py-2 focus:outline-none focus:ring-1 focus:ring-cyan-500 border border-gray-700 font-mono"
                 placeholder=">>1に反応してください（Ctrl+Enterで送信）"
                 value={newPost}
-                onChange={(e) => setNewPost(e.target.value)}
+                onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setNewPost(e.target.value)}
                 onKeyDown={handleKeyPress}
               />
             </div>
