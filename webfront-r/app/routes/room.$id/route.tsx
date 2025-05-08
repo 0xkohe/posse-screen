@@ -41,11 +41,30 @@ const CosmicForumPage: React.FC = () => {
     // Get room details
     const roomRef = doc(db, 'rooms', roomId);
     
+    // Subscribe to room document to get its details
+    const roomUnsubscribe = onSnapshot(roomRef, (roomSnapshot) => {
+      if (roomSnapshot.exists()) {
+        const roomData = roomSnapshot.data();
+        setRoom({
+          id: roomSnapshot.id,
+          name: roomData.name || 'Unnamed Room',
+          createdAt: roomData.createdAt instanceof Timestamp ? roomData.createdAt.toDate() : new Date(),
+          createdBy: roomData.createdBy || 'Anonymous',
+          participants: roomData.participants || []
+        });
+      } else {
+        setError('Room not found');
+      }
+    }, (err) => {
+      console.error('Error getting room details:', err);
+      setError('Failed to load room information');
+    });
+    
     // Subscribe to room messages
     const messagesRef = collection(db, 'rooms', roomId, 'messages');
     const messagesQuery = query(messagesRef, orderBy('createdAt', 'asc'));
     
-    const unsubscribe = onSnapshot(messagesQuery, (snapshot) => {
+    const messagesUnsubscribe = onSnapshot(messagesQuery, (snapshot) => {
       try {
         const messagesData = snapshot.docs.map((doc, index) => {
           const data = doc.data();
@@ -74,7 +93,10 @@ const CosmicForumPage: React.FC = () => {
       setLoading(false);
     });
 
-    return () => unsubscribe();
+    return () => {
+      roomUnsubscribe();
+      messagesUnsubscribe();
+    };
   }, [roomId]);
 
   useEffect(() => {
@@ -153,7 +175,7 @@ const CosmicForumPage: React.FC = () => {
         <div className="max-w-3xl mx-auto relative z-10">
           {/* Current thread info */}
           <div className="mb-6 bg-indigo-900/30 rounded-lg p-4 border border-cyan-800/30">
-            <h1 className="text-xl font-bold text-cyan-300 mb-2">【宇宙開発】人類の星間移住計画について語るスレ【第3銀河】</h1>
+            <h1 className="text-xl font-bold text-cyan-300 mb-2">{room?.name || '【宇宙開発】人類の星間移住計画について語るスレ【第3銀河】'}</h1>
             <p className="text-gray-300 text-sm">
               Room ID: {roomId}<br />
               ここは宇宙と2chが融合した新時代の掲示板。<br />
