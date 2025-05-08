@@ -178,9 +178,8 @@ const CosmicForumPage: React.FC = () => {
             <h1 className="text-xl font-bold text-cyan-300 mb-2">{room?.name || '【宇宙開発】人類の星間移住計画について語るスレ【第3銀河】'}</h1>
             <p className="text-gray-300 text-sm">
               Room ID: {roomId}<br />
-              ここは宇宙と2chが融合した新時代の掲示板。<br />
-              地球の常識は捨てて、銀河の彼方から好きなことを書き込め。<br />
-              <span className="text-cyan-400">※荒らしは虚空に消去されます</span>
+              ここは新時代の掲示板。<br />
+              常識は捨てて、好きなことを書き込む。<br />
             </p>
           </div>
 

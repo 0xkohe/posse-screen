@@ -166,7 +166,7 @@ const PostForm: React.FC<PostFormProps> = ({ onSubmit, postCount }) => {
               ref={inputRef}
               rows={4}
               className="w-full bg-gray-800 text-white rounded px-3 py-2 focus:outline-none focus:ring-1 focus:ring-cyan-500 border border-gray-700 font-mono"
-              placeholder=">>1に反応してください（Ctrl+Enterで送信）"
+              placeholder="まよったら書き込んでください（Ctrl+Enterで送信）"
               value={newPost}
               onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setNewPost(e.target.value)}
               onKeyDown={handleKeyPress}
@@ -230,9 +230,6 @@ const PostForm: React.FC<PostFormProps> = ({ onSubmit, postCount }) => {
               disabled={!newPost.trim()}
             >
               <span className="flex items-center">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                </svg>
                 書き込む
               </span>
             </button>
