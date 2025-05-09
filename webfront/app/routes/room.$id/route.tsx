@@ -71,8 +71,8 @@ const CosmicForumPage: React.FC = () => {
           return {
             id: doc.id,
             number: (index + 1).toString(),
-            username: data.senderId, // Using senderId as username for now
-            text: data.text,
+            username: data.senderId || 'Anonymous AI', // Add default value if senderId is undefined
+            text: data.text || '',
             timestamp: data.createdAt instanceof Timestamp ? data.createdAt.toDate() : new Date(),
             likes: 0, // Initialize likes to 0 since it's not in Firebase schema
             messageType: data.messageType || 'text',
