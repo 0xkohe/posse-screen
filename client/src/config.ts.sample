@@ -16,6 +16,7 @@ const config = {
   ],
   // style for border line of words
   strokeStyle: "rgb(0,0,0)",
+  apiKey: "", // for open router
 };
 
 export default config;

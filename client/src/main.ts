@@ -1,6 +1,36 @@
 "use strict";
-
+ import OpenAI from "openai";
 import config from "./config";
+
+ 
+ const client = new OpenAI({
+   apiKey: config.apiKey,
+   dangerouslyAllowBrowser: true,
+   baseURL: "https://openrouter.ai/api/v1"
+ });
+ 
+ (async () => {
+   alert("start");
+   // const response = await client.responses.create({
+   //   model: 'gpt-4o',
+   //   instructions: 'You are a coding assistant that talks like a pirate',
+   //   input: 'Are semicolons optional in JavaScript?',
+   // });
+   const completion = await client.chat.completions.create({
+    model: 'openai/gpt-4o',
+    messages: [
+      {
+        role: 'user',
+        content: 'What is the meaning of life?',
+      },
+    ],
+  });
+
+   alert("get");
+   alert(completion.choices[0].message.content);
+   //alert(response.output_text);
+ })();
+
 import app from "./firebase";
 import { Comment } from "./comment";
 import {

@@ -32,6 +32,7 @@
     "webpack-cli": "^4.9.1"
   },
   "dependencies": {
-    "firebase": "^11.7.1"
+    "firebase": "^11.7.1",
+    "openai": "^4.98.0"
   }
 }
