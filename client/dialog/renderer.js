@@ -1,7 +1,7 @@
 const setButton = document.getElementById("btn");
-const roomNameInput = document.getElementById("roomName");
+const roomIdInput = document.getElementById("roomId");
 setButton.addEventListener("click", () => {
-  const roomName = roomNameInput.value;
-  setButton.innerHTML = roomName;
-  window.electronAPI.setRoomName(roomName);
+  const roomId = roomIdInput.value;
+  setButton.innerHTML = roomId;
+  window.electronAPI.setroomId(roomId);
 });

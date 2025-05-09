@@ -14,7 +14,7 @@ app.on("ready", function () {
     },
   });
   firstWindow.loadURL("file://" + __dirname + "/dialog/index.html");
-  ipcMain.on("roomName", (event, roomName) => {
+  ipcMain.on("roomId", (event, roomId) => {
     firstWindow.close();
     firstWindow = null;
 
@@ -22,7 +22,7 @@ app.on("ready", function () {
 
     for (const d of displays) {
       showWindow(
-        roomName,
+        roomId,
         d.bounds.x,
         d.bounds.y,
         d.bounds.width,
@@ -33,7 +33,7 @@ app.on("ready", function () {
   });
 });
 
-function showWindow(roomName, x, y, width, height, workAreaHeight) {
+function showWindow(roomId, x, y, width, height, workAreaHeight) {
   var mainWindow = new BrowserWindow({
     x: x,
     y: y,
@@ -61,9 +61,10 @@ function showWindow(roomName, x, y, width, height, workAreaHeight) {
       height +
       "&workAreaHeight=" +
       workAreaHeight +
-      "&roomName=" +
-      roomName
+      "&roomId=" +
+      roomId
   );
+  console.log("after loadURL");
 
   mainWindow.on("closed", function () {
     mainWindow = null;

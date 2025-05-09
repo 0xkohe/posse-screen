@@ -10,6 +10,7 @@ import {
   query,
   orderBy,
   Firestore,
+  where,
 } from "firebase/firestore";
 
 module POSSEscreen {
@@ -17,7 +18,7 @@ module POSSEscreen {
     private ctx: CanvasRenderingContext2D;
     private myCanvas: HTMLCanvasElement;
     private comments: Comment[] = [];
-    private roomname: string;
+    private roomId: string; // roomIdをroomIdに変更
     private db: Firestore;
     private screenWidth: number;
     private screenHeight: number;
@@ -25,7 +26,7 @@ module POSSEscreen {
     private fontHeight: number;
 
     constructor(
-      roomname: string,
+      roomId: string, // roomIdをroomIdに変更
       screenWidth: number,
       screenHeight: number,
       workAreaHeight: number
@@ -36,7 +37,7 @@ module POSSEscreen {
       this.myCanvas.width = document.documentElement.clientWidth;
       this.myCanvas.height = document.documentElement.clientHeight;
 
-      this.roomname = roomname;
+      this.roomId = roomId; // roomIdをroomIdに変更
       this.screenWidth = screenWidth;
       this.screenHeight = screenHeight;
       this.workAreaHeight = workAreaHeight;
@@ -50,16 +51,20 @@ module POSSEscreen {
 
       this.db = getFirestore(app);
 
+      // Firestoreのパスを修正: '/rooms/{roomId}/messages'
+      // テキストメッセージのみを取得するためのフィルターを追加
       const q = query(
-        collection(this.db, "rooms", this.roomname, "chats"),
-        orderBy("datetime")
+        collection(this.db, "rooms", this.roomId, "messages"),
+        orderBy("createdAt", "desc")
       );
+      
       onSnapshot(q, (querySnapshot) => {
         querySnapshot.docChanges().forEach((change) => {
           const data = change.doc.data();
           console.log(data);
           if (change.type === "added") {
-            this.addMessage(data.message);
+            // テキストフィールドを使用
+            this.addMessage(data.text);
           }
         });
       });
@@ -85,13 +90,17 @@ module POSSEscreen {
     private getAvailableLane = () => {
       let lane: number = 0;
       while (true) {
+        let laneUsed = false;
         for (const c of this.comments) {
           if (c.lane == lane) {
-            lane++;
-            continue;
+            laneUsed = true;
+            break;
           }
         }
-        return lane;
+        if (!laneUsed) {
+          return lane;
+        }
+        lane++;
       }
     };
 
@@ -134,12 +143,14 @@ module POSSEscreen {
 }
 
 function start(
-  roomname: string,
+  roomId: string, // roomIdをroomIdに変更
   width: number,
   height: number,
   workAreaHeight: number
 ) {
-  const main = new POSSEscreen.Main(roomname, width, height, workAreaHeight);
+  console.log("start");
+  const main = new POSSEscreen.Main(roomId, width, height, workAreaHeight);
+  console.log("main");
 
   function loop() {
     main.update();
@@ -149,9 +160,12 @@ function start(
   }
   window.requestAnimationFrame(loop);
 }
+
+console.log("start 0");
 const sp = new URLSearchParams(window.location.search);
+console.log(sp.get("roomId"));
 start(
-  sp.get("roomName") + "",
+  sp.get("roomId") + "", // roomIdをroomIdに変更
   Number(sp.get("width")),
   Number(sp.get("height")),
   Number(sp.get("workAreaHeight"))
