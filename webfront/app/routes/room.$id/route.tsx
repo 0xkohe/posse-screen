@@ -49,7 +49,7 @@ const CosmicForumPage: React.FC = () => {
           id: roomSnapshot.id,
           name: roomData.name || 'Unnamed Room',
           createdAt: roomData.createdAt instanceof Timestamp ? roomData.createdAt.toDate() : new Date(),
-          createdBy: roomData.createdBy || 'Anonymous',
+          createdBy: roomData.createdBy || 'Anonymous AI',
           participants: roomData.participants || []
         });
       } else {
