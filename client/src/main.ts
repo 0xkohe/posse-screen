@@ -32,27 +32,46 @@ if (isApiKeyConfigured) {
   console.warn("OpenAI API key not configured. AI response feature will be disabled.");
 }
 
-// Function to generate AI response using OpenAI
-async function generateAIResponse(message: string): Promise<string> {
+// Function to generate dialect conversion for a message
+async function convertToDialect(messageText: string, dialectType: string): Promise<string> {
   // Check if client is initialized (API key is configured)
   if (!client) {
-    return "AI response is not available. API key is not configured.";
+    return messageText; // Return original if API not available
+  }
+  
+  let promptPrefix = "";
+  
+  // Set prompt prefix based on dialect type
+  switch(dialectType) {
+    case "kansai":
+      promptPrefix = "次の文章を関西弁に変換してください。※変換した関西弁のみ出力してください。: ";
+      break;
+    case "space":
+      promptPrefix = "次の文章を宇宙人が話すような宇宙語に変換してください。文末に「ビーム」や「ズガガ」などをつけたり、単語をロボットっぽく変換してください。※変換した宇宙語のみ出力するように。: ";
+      break;
+    default:
+      // No special prompt for default case - just return the original message
+      return messageText;
   }
   
   try {
-    const completion = await client.chat.completions.create({
-      model: 'openai/gpt-4o',
-      messages: [
-        {
-          role: 'user',
-          content: "次の質問を関西弁で答えてください。" + message.replace('@ai', '').trim(),
-        },
-      ],
-    });
-    return completion.choices[0].message.content || "AI couldn't generate a response";
+    if (client) {
+      const completion = await client.chat.completions.create({
+        model: 'openai/gpt-4o',
+        messages: [
+          {
+            role: 'user',
+            content: promptPrefix + messageText,
+          },
+        ],
+      });
+      return completion.choices[0]?.message?.content || messageText;
+    } else {
+      return messageText;
+    }
   } catch (error) {
-    console.error("Error generating AI response:", error);
-    return "Error generating AI response. Please try again.";
+    console.error("Error generating dialect conversion:", error);
+    return messageText; // Return original message if conversion fails
   }
 }
 
@@ -90,7 +109,7 @@ module POSSEscreen {
       this.fontHeight =
         mesure.actualBoundingBoxAscent + mesure.actualBoundingBoxDescent;
 
-      console.log("const");
+      console.log("constructor initialized");
 
       this.db = getFirestore(app);
 
@@ -104,34 +123,38 @@ module POSSEscreen {
           const data = change.doc.data();
           console.log(data);
           if (change.type === "added") {
-            this.addMessage(data.text);
+            // Get dialect type from the message data
+            const messageDialectType = data.dialect_type || "normal";
             
-            // Check if message contains @ai, is not already an AI response, and process it
-            if (data.text.includes("@ai") && !data.isAIResponse) {
-              this.handleAIRequest(data.text, change.doc.id);
+            // Convert the message based on dialect type if not an AI response already
+            if (!data.isAIResponse) {
+              this.handleDialectConversion(data.text, change.doc.id, messageDialectType);
+            } else {
+              // Add AI responses directly without conversion
+              this.addMessage(data.text);
             }
           }
         });
       });
     }
 
-    // Handle AI request and post response back to Firestore
-    private handleAIRequest = async (message: string, messageId: string) => {
+    // Handle dialect conversion and post response back to Firestore
+    private handleDialectConversion = async (messageText: string, messageId: string, dialectType: string) => {
+      // Skip conversion if dialect is normal
+      if (dialectType === "normal") {
+        this.addMessage(messageText);
+        return;
+      }
+      
       // Don't proceed if API key is not configured
       if (!isApiKeyConfigured) {
-        console.warn("Skipping AI request: API key not configured");
-        // Optionally, you could send a message to Firestore indicating the AI is not available
-        await addDoc(collection(this.db, "rooms", this.roomId, "messages"), {
-          text: `>> ${message}\nAI response is not available. API key is not configured.`,
-          createdAt: serverTimestamp(),
-          isAIResponse: true,
-          originalMessageId: messageId // Store reference to original message
-        });
+        console.warn("Skipping dialect conversion: API key not configured");
+        this.addMessage(messageText);
         return;
       }
       
       try {
-        // Check if we've already responded to this message
+        // Check if we've already converted this message
         const checkQuery = query(
           collection(this.db, "rooms", this.roomId, "messages"),
           where("originalMessageId", "==", messageId)
@@ -139,27 +162,29 @@ module POSSEscreen {
         
         const checkSnapshot = await getDocs(checkQuery);
         if (!checkSnapshot.empty) {
-          console.log("Already responded to this message, skipping");
+          console.log("Already converted this message, skipping");
           return;
         }
         
-        // Generate AI response
-        const aiResponse = await generateAIResponse(message);
+        // Display original message
+        this.addMessage(messageText);
         
-        // Format response with original message
-        const formattedResponse = `>> ${message} << \n${aiResponse}`;
+        // Generate converted message based on dialect type
+        const convertedMessage = await convertToDialect(messageText, dialectType);
         
-        // Add AI response to Firestore
+        // Add the converted message to Firestore
         await addDoc(collection(this.db, "rooms", this.roomId, "messages"), {
-          text: formattedResponse,
+          text: convertedMessage,
           createdAt: serverTimestamp(),
           isAIResponse: true,
-          originalMessageId: messageId // Store reference to original message
+          originalMessageId: messageId,
+          dialect_type: dialectType // Store the dialect type with the AI response
         });
         
-        console.log("AI response added to Firestore");
+        console.log("Dialect-converted message added to Firestore");
       } catch (error) {
-        console.error("Error handling AI request:", error);
+        console.error("Error handling dialect conversion:", error);
+        this.addMessage(messageText); // Display original if conversion fails
       }
     };
 
@@ -238,7 +263,7 @@ function start(
 ) {
   console.log("start");
   const main = new POSSEscreen.Main(roomId, width, height, workAreaHeight);
-  console.log("main");
+  console.log("main initialized");
 
   function loop() {
     main.update();
@@ -247,12 +272,15 @@ function start(
     window.requestAnimationFrame(loop);
   }
   window.requestAnimationFrame(loop);
+  
+  return main; // Return the main instance for external access
 }
 
-console.log("start 0");
+console.log("starting application");
 const sp = new URLSearchParams(window.location.search);
-console.log(sp.get("roomId"));
-start(
+console.log("Room ID:", sp.get("roomId"));
+
+const main = start(
   sp.get("roomId") + "",
   Number(sp.get("width")),
   Number(sp.get("height")),
