@@ -13,7 +13,8 @@ import {
   where,
   updateDoc,
   serverTimestamp,
-  doc
+  doc,
+  addDoc
 } from "firebase/firestore";
 
 // Check if API key is configured
@@ -47,7 +48,7 @@ async function convertToDialect(messageText: string, dialectType: string): Promi
       promptPrefix = "次の文章を関西弁に変換してください。※変換した関西弁のみ出力してください。: ";
       break;
     case "space":
-      promptPrefix = "次の文章を宇宙人が話すような宇宙語に変換してください。文末に「ビーム」や「ズガガ」などをつけたり、単語をロボットっぽく変換してください。※変換した宇宙語のみ出力するように。: ";
+      promptPrefix = "次の文章を宇宙人が話すような宇宙語に変換してください。※変換した宇宙語のみ出力するように。: ";
       break;
     default:
       // No special prompt for default case - just return the original message
@@ -89,6 +90,9 @@ module POSSEscreen {
     // Map to keep track of messages being processed to avoid double processing
     private processingMessages: Map<string, boolean> = new Map();
     private displayIndex: number | null = null;
+    // 追加: メッセージカウントと最近のメッセージ保存用
+    private messageCount: number = 0;
+    private recentMessages: string[] = [];
 
     constructor(
       roomId: string,
@@ -119,6 +123,10 @@ module POSSEscreen {
       console.log("constructor initialized");
 
       this.db = getFirestore(app);
+      
+      // 追加: メッセージカウントと最近のメッセージの初期化
+      this.messageCount = 0;
+      this.recentMessages = [];
 
       const q = query(
         collection(this.db, "rooms", this.roomId, "messages"),
@@ -205,6 +213,7 @@ module POSSEscreen {
       }
     };
 
+    // 修正: メッセージ追加メソッドを更新
     private addMessage = (message: string) => {
       const rate =
         Math.random() * (config.speedRate - 100) * 2 - (config.speedRate - 100);
@@ -218,6 +227,62 @@ module POSSEscreen {
         config.fillStyle[Math.floor(Math.random() * config.fillStyle.length)]
       );
       this.comments.push(comment);
+      
+      // メッセージカウントを増やす
+      this.messageCount++;
+      
+      // 最近のメッセージを保存（最大10個まで）
+      this.recentMessages.push(message);
+      if (this.recentMessages.length > 10) {
+        this.recentMessages.shift(); // 古いメッセージを削除
+      }
+      
+      // 10メッセージごとにAIコメントを生成（displayIndexが0の場合のみ）
+      if (this.messageCount % 10 === 0 && this.displayIndex === 0) {
+        this.generateKansaiComment();
+      }
+    };
+    
+    // 追加: 関西弁コメント生成メソッド
+    private generateKansaiComment = async () => {
+      // APIキーが設定されていない場合は何もしない
+      if (!isApiKeyConfigured || !client) {
+        return;
+      }
+      
+      // 最近のメッセージを要約
+      const recentMessagesSummary = this.recentMessages.join("\n");
+      
+      try {
+        // 関西弁で最近のメッセージに対するコメントを生成
+        const promptText = `次の10個のメッセージは勉強会のコメント集です。その後のコメントが盛り上がるように簡潔に関西弁でコメントしてください。返信は関西弁のコメントのみにしてください：\n${recentMessagesSummary}`;
+        
+        const completion = await client.chat.completions.create({
+          model: 'openai/gpt-4o',
+          messages: [
+            {
+              role: 'user',
+              content: promptText,
+            },
+          ],
+        });
+        
+        const kansaiComment = completion.choices[0]?.message?.content || "なんやこれ、おもろいやんか！";
+        
+        // Firestoreにメッセージを追加（senderId: "AI"としてマーク）
+        const messagesRef = collection(this.db, "rooms", this.roomId, "messages");
+        await addDoc(messagesRef, {
+          text: kansaiComment,
+          createdAt: serverTimestamp(),
+          senderId: "AI",
+          dialect_type: "normal", // 既に関西弁なので変換不要
+          isConverted: true
+        });
+        
+        console.log("AI関西弁コメントを追加しました:", kansaiComment);
+      } catch (error) {
+        console.error("AI関西弁コメント生成エラー:", error);
+      }
     };
 
     private getAvailableLane = () => {
