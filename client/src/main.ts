@@ -88,6 +88,7 @@ module POSSEscreen {
     private fontHeight: number;
     // Map to keep track of messages being processed to avoid double processing
     private processingMessages: Map<string, boolean> = new Map();
+    private displayIndex: number | null = null;
 
     constructor(
       roomId: string,
@@ -101,7 +102,11 @@ module POSSEscreen {
       this.myCanvas.width = document.documentElement.clientWidth;
       this.myCanvas.height = document.documentElement.clientHeight;
 
-      this.roomId = roomId;
+      // this.roomId = roomId;
+      // roomId + `_${dislayIndex}`;,
+      const [rid, indexStr] = roomId.split('_');
+      this.displayIndex = indexStr !== undefined ? parseInt(indexStr, 10) : null;
+      this.roomId = rid;
       this.screenWidth = screenWidth;
       this.screenHeight = screenHeight;
       this.workAreaHeight = workAreaHeight;

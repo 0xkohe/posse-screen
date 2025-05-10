@@ -20,9 +20,10 @@ app.on("ready", function () {
 
     let displays = electron.screen.getAllDisplays();
 
-    for (const d of displays) {
+    for (let i = 0; i < displays.length; i++) {
+      const d = displays[i];
       showWindow(
-        roomId,
+        roomId + `_${i}`,
         d.bounds.x,
         d.bounds.y,
         d.bounds.width,
