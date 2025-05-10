@@ -153,7 +153,6 @@ const CosmicForumPage: React.FC = () => {
   return (
     <div className="flex flex-col h-screen bg-gray-950 text-white bg-[url('https://via.placeholder.com/100/000015/000015?text=')] bg-repeat">
       {/* Header */}
-      <Header postCount={posts.length} activeUsers={42} />
 
       {/* Forum content area */}
       <div className="flex-1 overflow-y-auto p-4 bg-gray-950 relative">

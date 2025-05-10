@@ -17,13 +17,10 @@ const PostForm: React.FC<PostFormProps> = ({ onSubmit, postCount }) => {
 
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
-  // Set random username on first render
+
   React.useEffect(() => {
-    // Focus input field
     inputRef.current?.focus();
 
-    // Suggest random anonymous name
     const anonymousNames = [
       "宇宙飛行士774号",
       "銀河系住民",
@@ -42,7 +39,6 @@ const PostForm: React.FC<PostFormProps> = ({ onSubmit, postCount }) => {
     if (file) {
       setSelectedFile(file);
 
-      // Create preview URL
       const reader = new FileReader();
       reader.onloadend = () => {
         const result = reader.result;
@@ -58,7 +54,6 @@ const PostForm: React.FC<PostFormProps> = ({ onSubmit, postCount }) => {
     if (newPost.trim() === '') return;
     const currentUsername = username.trim() === '' ? "宇宙の名無しさん" : username.trim();
 
-    // Create new post object
     const newPostObj: Post = {
       id: String(Math.floor(1000 + Math.random() * 9000)),
       number: `${postCount + 1}`,
@@ -74,11 +69,10 @@ const PostForm: React.FC<PostFormProps> = ({ onSubmit, postCount }) => {
     setNewPost('');
     setPreviewImage(null);
     setSelectedFile(null);
-    
-    // Suggest a new random name
+
     const anonymousNames = [
-        "宇宙飛行士774号", "銀河系住民", "星間旅行者", "ブラックホーラー", 
-        "惑星開拓者", "地球脱出民", "宇宙猫", "小惑星マイナー"
+      "宇宙飛行士774号", "銀河系住民", "星間旅行者", "ブラックホーラー", 
+      "惑星開拓者", "地球脱出民", "宇宙猫", "小惑星マイナー"
     ];
     setUsername(anonymousNames[Math.floor(Math.random() * anonymousNames.length)]);
     inputRef.current?.focus();
@@ -91,7 +85,6 @@ const PostForm: React.FC<PostFormProps> = ({ onSubmit, postCount }) => {
     }
   };
 
-  // Insert ASCII Art examples
   const insertAA = () => {
     const asciiArts = [
       "(^_^)",
@@ -107,182 +100,187 @@ const PostForm: React.FC<PostFormProps> = ({ onSubmit, postCount }) => {
   };
 
   return (
-    <div className="p-4 bg-gradient-to-r from-gray-900 via-indigo-950 to-gray-900 border-t border-cyan-900/50 shadow-lg">
-      <div className="max-w-3xl mx-auto bg-gray-900 rounded-lg overflow-hidden border border-cyan-800/30 shadow-lg relative">
-        {/* Glowing line at top of input */}
-        <div className="h-1 w-full bg-gradient-to-r from-indigo-500 via-purple-500 to-cyan-500"></div>
+    <div className="p-2 bg-gradient-to-r from-gray-900 via-indigo-950 to-gray-900 border-t border-cyan-900/50 shadow-lg">
+      <div className="max-w-full mx-auto bg-gray-900 rounded-lg overflow-hidden border border-cyan-800/30 shadow-lg relative">
+        <div className="h-0.5 w-full bg-gradient-to-r from-indigo-500 via-purple-500 to-cyan-500"></div>
 
-        <div className="p-4">
-          <div className="flex items-center mb-3">
-            <div
-              className="relative w-8 h-8 rounded-full bg-gradient-to-br from-indigo-600 to-purple-700 flex items-center justify-center mr-2 cursor-pointer hover:opacity-80 transition-opacity"
-              onClick={() => setShowAnonymousOptions(!showAnonymousOptions)}
-            >
-              <span className="text-sm font-bold text-white">{username.charAt(0).toUpperCase() || '？'}</span>
-              {showAnonymousOptions && (
-                <div className="absolute bottom-full left-0 mb-2 w-48 bg-gray-800 border border-cyan-900/50 rounded-lg shadow-lg z-20">
-                  <div className="p-2">
-                    <p className="text-xs text-gray-400 mb-2">匿名ハンドルネーム:</p>
-                    <input
-                      type="text"
-                      className="w-full bg-gray-700 text-white text-sm rounded px-3 py-1 focus:outline-none focus:ring-1 focus:ring-cyan-500 border border-gray-600"
-                      placeholder="宇宙の名無しさん"
-                      value={username}
-                      onChange={(e: ChangeEvent<HTMLInputElement>) => setUsername(e.target.value)}
-                    />
-                    <div className="mt-2 grid grid-cols-2 gap-1">
-                      {["宇宙飛行士", "銀河系住民", "火星移住者", "異星人", "ブラックホーラー", "地球脱出民"].map((name) => (
-                        <button
-                          key={name}
-                          className="text-xs py-1 px-2 bg-indigo-900/50 hover:bg-indigo-800 rounded text-cyan-300 truncate"
-                          onClick={() => {
-                            setUsername(name);
-                            setShowAnonymousOptions(false);
-                            inputRef.current?.focus();
-                          }}
-                        >
-                          {name}
-                        </button>
-                      ))}
+        <div className="p-3">
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-2">
+            <div className="md:col-span-1 flex md:flex-col justify-between items-start space-y-0 md:space-y-2">
+              <div className="flex items-center">
+                <div
+                  className="relative w-7 h-7 rounded-full bg-gradient-to-br from-indigo-600 to-purple-700 flex items-center justify-center mr-2 cursor-pointer hover:opacity-80 transition-opacity"
+                  onClick={() => setShowAnonymousOptions(!showAnonymousOptions)}
+                >
+                  <span className="text-xs font-bold text-white">{username.charAt(0).toUpperCase() || '？'}</span>
+                  {showAnonymousOptions && (
+                    <div className="absolute bottom-full left-0 mb-2 w-48 bg-gray-800 border border-cyan-900/50 rounded-lg shadow-lg z-20">
+                      <div className="p-2">
+                        <p className="text-xs text-gray-400 mb-1">匿名ハンドルネーム:</p>
+                        <input
+                          type="text"
+                          className="w-full bg-gray-700 text-white text-sm rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-cyan-500 border border-gray-600"
+                          placeholder="宇宙の名無しさん"
+                          value={username}
+                          onChange={(e: ChangeEvent<HTMLInputElement>) => setUsername(e.target.value)}
+                        />
+                        <div className="mt-2 grid grid-cols-2 gap-1">
+                          {["宇宙飛行士", "銀河系住民", "火星移住者", "異星人", "ブラックホーラー", "地球脱出民"].map((name) => (
+                            <button
+                              key={name}
+                              className="text-xs py-1 px-1 bg-indigo-900/50 hover:bg-indigo-800 rounded text-cyan-300 truncate"
+                              onClick={() => {
+                                setUsername(name);
+                                setShowAnonymousOptions(false);
+                                inputRef.current?.focus();
+                              }}
+                            >
+                              {name}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
-              )}
+                <input
+                  id="username"
+                  type="text"
+                  className="bg-gray-800 border-b border-cyan-900/30 text-cyan-300 rounded px-2 py-1 focus:outline-none focus:border-cyan-500 text-xs w-24 md:w-full"
+                  placeholder="匿名ハンドル"
+                  value={username}
+                  onChange={(e: ChangeEvent<HTMLInputElement>) => setUsername(e.target.value)}
+                />
+              </div>
+
+              <div className="md:mt-1 flex md:flex-col items-center md:items-start space-x-1 md:space-x-0 md:space-y-1">
+                <div className="hidden md:block text-xs text-gray-400">スタイル:</div>
+                <div className="flex md:grid md:grid-cols-3 space-x-1 md:space-x-0 md:gap-1">
+                  <button
+                    className={`px-2 py-0.5 text-xs rounded-full transition ${
+                      dialectType === 'kansai' 
+                        ? 'bg-indigo-600 text-white' 
+                        : 'bg-gray-800 text-cyan-300 hover:bg-gray-700'
+                    }`}
+                    onClick={() => setDialectType('kansai')}
+                  >
+                    関西弁
+                  </button>
+                  <button
+                    className={`px-2 py-0.5 text-xs rounded-full transition ${
+                      dialectType === 'space' 
+                        ? 'bg-purple-600 text-white' 
+                        : 'bg-gray-800 text-cyan-300 hover:bg-gray-700'
+                    }`}
+                    onClick={() => setDialectType('space')}
+                  >
+                    宇宙語
+                  </button>
+                  <button
+                    className={`px-2 py-0.5 text-xs rounded-full transition ${
+                      dialectType === 'normal' 
+                        ? 'bg-cyan-600 text-white' 
+                        : 'bg-gray-800 text-cyan-300 hover:bg-gray-700'
+                    }`}
+                    onClick={() => setDialectType('normal')}
+                  >
+                    通常
+                  </button>
+                </div>
+              </div>
             </div>
-            <div>
-              <input
-                id="username"
-                type="text"
-                className="w-full bg-gray-800 border-b border-cyan-900/30 text-cyan-300 rounded px-3 py-1 focus:outline-none focus:border-cyan-500 text-sm"
-                placeholder="匿名ハンドルネーム"
-                value={username}
-                onChange={(e: ChangeEvent<HTMLInputElement>) => setUsername(e.target.value)}
+
+            <div className="md:col-span-4 flex flex-col">
+              <textarea
+                id="post-content"
+                ref={inputRef}
+                rows={3}
+                className="w-full bg-gray-800 text-white rounded px-3 py-2 focus:outline-none focus:ring-1 focus:ring-cyan-500 border border-gray-700 font-mono text-sm"
+                placeholder={
+                  dialectType === 'kansai' ? "なんか書いてみようやぁ～（Ctrl+Enterで送信やで）" :
+                  dialectType === 'space' ? "✧✧✧っぽ✧彡✧宇宙語でっぽ✧彡✧✧（Ctrl+Enter✧彡）" :
+                  "投稿内容をご入力ください（Ctrl+Enterで送信）"
+                }
+                value={newPost}
+                onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setNewPost(e.target.value)}
+                onKeyDown={handleKeyPress}
               />
-              <p className="text-xs text-gray-500 mt-1">※任意のハンドルネームを入力（空白で「宇宙の名無しさん」）</p>
+
+              <div className="flex justify-between items-center mt-1 space-x-2">
+                <div className="flex items-center space-x-1">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    ref={fileInputRef}
+                    className="hidden"
+                    onChange={handleFileChange}
+                  />
+                  <button
+                    type="button"
+                    className="p-1 rounded hover:bg-gray-700 transition text-cyan-300"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                  </button>
+                  <button
+                    type="button"
+                    className="p-1 rounded hover:bg-gray-700 transition text-cyan-300"
+                    onClick={insertAA}
+                  >
+                    <span className="text-xs font-mono">AA</span>
+                  </button>
+                  <button
+                    type="button" 
+                    className="p-1 rounded hover:bg-gray-700 transition text-cyan-300"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </button>
+                
+                  <span className="text-xs text-gray-400 ml-1">
+                    <span className="text-cyan-400">{newPost.length}</span>/1000
+                    {newPost.length > 900 && <span className="ml-1 text-orange-400">（残り{1000 - newPost.length}字）</span>}
+                  </span>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <span className="text-xs text-gray-400">
+                    <span className="text-cyan-400">{postCount}</span>レス
+                  </span>
+                  <button
+                    onClick={handleCreatePost}
+                    className={`px-3 py-1 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded text-sm font-medium hover:from-indigo-500 hover:to-purple-500 transition disabled:opacity-50 disabled:cursor-not-allowed ${(!newPost.trim()) ? 'opacity-50 cursor-not-allowed' : 'animate-pulse'}`}
+                    disabled={!newPost.trim()}
+                  >
+                    {dialectType === 'kansai' ? '書き込むでぇ～' :
+                     dialectType === 'space' ? '✧彡送信っぽ✧彡' :
+                     '書き込む'}
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
 
-          <div className="mb-3">
-            <textarea
-              id="post-content"
-              ref={inputRef}
-              rows={4}
-              className="w-full bg-gray-800 text-white rounded px-3 py-2 focus:outline-none focus:ring-1 focus:ring-cyan-500 border border-gray-700 font-mono"
-              placeholder={
-                dialectType === 'kansai' ? "なんか書いてみようやぁ～（Ctrl+Enterで送信やで）" :
-                dialectType === 'space' ? "✧✧✧っぽ✧彡✧宇宙語でっぽ✧彡✧✧（Ctrl+Enter✧彡）" :
-                "投稿内容をご入力ください（Ctrl+Enterで送信）"
-              }
-              value={newPost}
-              onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setNewPost(e.target.value)}
-              onKeyDown={handleKeyPress}
-            />
-          </div>
-
-          {/* Dialect selector */}
-          <div className="mb-3">
-            <div className="text-xs text-gray-400 mb-1">投稿スタイル：</div>
-            <div className="flex space-x-2">
-              <button
-                className={`px-3 py-1 text-sm rounded-full transition ${
-                  dialectType === 'kansai' 
-                    ? 'bg-indigo-600 text-white' 
-                    : 'bg-gray-800 text-cyan-300 hover:bg-gray-700'
-                }`}
-                onClick={() => setDialectType('kansai')}
-              >
-                関西弁
-              </button>
-              <button
-                className={`px-3 py-1 text-sm rounded-full transition ${
-                  dialectType === 'space' 
-                    ? 'bg-purple-600 text-white' 
-                    : 'bg-gray-800 text-cyan-300 hover:bg-gray-700'
-                }`}
-                onClick={() => setDialectType('space')}
-              >
-                宇宙語
-              </button>
-              <button
-                className={`px-3 py-1 text-sm rounded-full transition ${
-                  dialectType === 'normal' 
-                    ? 'bg-cyan-600 text-white' 
-                    : 'bg-gray-800 text-cyan-300 hover:bg-gray-700'
-                }`}
-                onClick={() => setDialectType('normal')}
-              >
-                通常
-              </button>
-            </div>
-          </div>
-
-          {/* Preview display */}
           {previewImage && (
-            <div className="mb-3 relative inline-block">
-              <img src={previewImage} alt="プレビュー" className="max-h-32 rounded border border-gray-700" />
+            <div className="mt-2 relative inline-block">
+              <img src={previewImage} alt="プレビュー" className="max-h-24 rounded border border-gray-700" />
               <button
                 className="absolute top-1 right-1 bg-gray-900/80 rounded-full p-1 hover:bg-red-900/80"
                 onClick={() => {
                   setPreviewImage(null);
                   setSelectedFile(null);
-                  if(fileInputRef.current) fileInputRef.current.value = ""; // Reset file selection
+                  if(fileInputRef.current) fileInputRef.current.value = ""; 
                 }}
               >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             </div>
           )}
-
-          <div className="flex justify-between items-center">
-            <div className="flex space-x-2">
-              <input
-                type="file"
-                accept="image/*"
-                ref={fileInputRef}
-                className="hidden"
-                onChange={handleFileChange}
-              />
-              <button
-                type="button"
-                className="p-2 rounded hover:bg-gray-700 transition text-cyan-300"
-                onClick={insertAA}
-              >
-                <span className="text-sm font-mono">AA</span>
-                <span className="sr-only">AA挿入</span>
-              </button>
-              <button type="button" className="p-2 rounded hover:bg-gray-700 transition text-cyan-300">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </button>
-            </div>
-            <button
-              onClick={handleCreatePost}
-              className={`px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded font-medium hover:from-indigo-500 hover:to-purple-500 transition disabled:opacity-50 disabled:cursor-not-allowed ${(!newPost.trim()) ? 'opacity-50 cursor-not-allowed' : 'animate-pulse'}`}
-              disabled={!newPost.trim()}
-            >
-              <span className="flex items-center">
-                {dialectType === 'kansai' ? '書き込むでぇ～' :
-                 dialectType === 'space' ? '✧彡送信っぽ✧彡' :
-                 '書き込む'}
-              </span>
-            </button>
-          </div>
-        </div>
-
-        {/* Status display at bottom of input */}
-        <div className="px-4 py-2 bg-gray-800 text-xs text-gray-400 flex justify-between items-center">
-          <div>
-            <span className="text-cyan-400">{postCount}</span> レス中
-          </div>
-          <div>
-            <span className="text-cyan-400">{newPost.length}</span> / 1000 文字
-            {newPost.length > 500 && <span className="ml-2 text-yellow-400">（長文注意）</span>}
-            {newPost.length > 900 && newPost.length <= 1000 && <span className="ml-2 text-orange-400">（残り {1000 - newPost.length} 文字）</span>}
-            {newPost.length > 1000 && <span className="ml-2 text-red-500">（文字数超過！）</span>}
-          </div>
         </div>
       </div>
     </div>
