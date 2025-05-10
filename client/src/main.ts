@@ -11,9 +11,9 @@ import {
   orderBy,
   Firestore,
   where,
-  addDoc,
+  updateDoc,
   serverTimestamp,
-  getDocs
+  doc
 } from "firebase/firestore";
 
 // Check if API key is configured
@@ -86,6 +86,8 @@ module POSSEscreen {
     private screenHeight: number;
     private workAreaHeight: number;
     private fontHeight: number;
+    // Map to keep track of messages being processed to avoid double processing
+    private processingMessages: Map<string, boolean> = new Map();
 
     constructor(
       roomId: string,
@@ -122,69 +124,79 @@ module POSSEscreen {
         querySnapshot.docChanges().forEach((change) => {
           const data = change.doc.data();
           console.log(data);
+          
           if (change.type === "added") {
-            // Get dialect type from the message data
-            const messageDialectType = data.dialect_type || "normal";
+            const messageId = change.doc.id;
+            const messageText = data.text;
+            const dialectType = data.dialect_type || "normal";
+            const isConverted = data.isConverted || false;
             
-            // Convert the message based on dialect type if not an AI response already
-            if (!data.isAIResponse) {
-              this.handleDialectConversion(data.text, change.doc.id, messageDialectType);
-            } else {
-              // Add AI responses directly without conversion
-              this.addMessage(data.text);
+            // Skip if we've already processed this message or it's already converted
+            if (this.processingMessages.get(messageId) || isConverted) {
+              // If it's already converted, just display it
+              this.addMessage(messageText);
+              return;
             }
+            
+            // Handle dialect conversion
+            if (dialectType !== "normal") {
+              // Mark message as being processed
+              this.processingMessages.set(messageId, true);
+              this.handleDialectConversion(messageText, messageId, dialectType);
+            } else {
+              // For normal messages, just display directly
+              this.addMessage(messageText);
+            }
+          } else if (change.type === "modified") {
+            // If a message was modified, update the display
+            // const messageText = data.text;
+            // Check if this message is in our comments list, if so update it
+            // For simplicity, we'll just add the updated message
+            // this.addMessage(messageText);
           }
         });
       });
     }
 
-    // Handle dialect conversion and post response back to Firestore
+    // Handle dialect conversion and update the original message document
     private handleDialectConversion = async (messageText: string, messageId: string, dialectType: string) => {
-      // Skip conversion if dialect is normal
-      if (dialectType === "normal") {
+      // Skip conversion if dialect is normal or API key is not configured
+      if (dialectType === "normal" || !isApiKeyConfigured) {
+        // Still display the original message
         this.addMessage(messageText);
-        return;
-      }
-      
-      // Don't proceed if API key is not configured
-      if (!isApiKeyConfigured) {
-        console.warn("Skipping dialect conversion: API key not configured");
-        this.addMessage(messageText);
+        this.processingMessages.delete(messageId);
         return;
       }
       
       try {
-        // Check if we've already converted this message
-        const checkQuery = query(
-          collection(this.db, "rooms", this.roomId, "messages"),
-          where("originalMessageId", "==", messageId)
-        );
-        
-        const checkSnapshot = await getDocs(checkQuery);
-        if (!checkSnapshot.empty) {
-          console.log("Already converted this message, skipping");
-          return;
-        }
-        
-        // Display original message
-        this.addMessage(messageText);
+        // Display original message first
+        // this.addMessage(messageText);
         
         // Generate converted message based on dialect type
         const convertedMessage = await convertToDialect(messageText, dialectType);
+        this.addMessage(convertedMessage);
         
-        // Add the converted message to Firestore
-        await addDoc(collection(this.db, "rooms", this.roomId, "messages"), {
-          text: convertedMessage,
-          createdAt: serverTimestamp(),
-          isAIResponse: true,
-          originalMessageId: messageId,
-          dialect_type: dialectType // Store the dialect type with the AI response
-        });
-        
-        console.log("Dialect-converted message added to Firestore");
+        // Only update if conversion actually changed the message
+        if (convertedMessage !== messageText) {
+          // Update the original document with the converted text
+          const messageRef = doc(this.db, "rooms", this.roomId, "messages", messageId);
+          await updateDoc(messageRef, {
+            text: convertedMessage,
+            originalText: messageText, // Store the original for reference
+            isConverted: true,
+            convertedAt: serverTimestamp()
+          });
+          
+          console.log("Message updated with dialect conversion");
+          
+          // Display the converted message (will be handled by the onSnapshot)
+          // No need to call addMessage here as the update will trigger the snapshot
+        }
       } catch (error) {
         console.error("Error handling dialect conversion:", error);
-        this.addMessage(messageText); // Display original if conversion fails
+      } finally {
+        // Make sure to clear the processing flag
+        this.processingMessages.delete(messageId);
       }
     };
 
