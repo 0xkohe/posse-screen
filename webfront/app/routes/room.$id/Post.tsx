@@ -21,7 +21,7 @@ const Post: React.FC<PostProps> = ({ post }) => {
         return (
           <p className="text-gray-100 whitespace-pre-line break-words">
             <span className="text-purple-400 text-xs font-bold mr-1">[宇宙語]</span>
-            <span className="font-mono">{post.text.split('').join('✧')}</span>
+            <span className="font-mono">{post.text}</span>
           </p>
         );
       case 'normal':
