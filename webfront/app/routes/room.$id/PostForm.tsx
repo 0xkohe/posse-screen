@@ -13,6 +13,7 @@ const PostForm: React.FC<PostFormProps> = ({ onSubmit, postCount }) => {
   const [showAnonymousOptions, setShowAnonymousOptions] = useState<boolean>(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [dialectType, setDialectType] = useState<'kansai' | 'space' | 'normal'>('kansai');
 
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -65,6 +66,7 @@ const PostForm: React.FC<PostFormProps> = ({ onSubmit, postCount }) => {
       text: newPost,
       timestamp: new Date(),
       likes: 0,
+      dialect_type: dialectType,
       ...(previewImage && { image: previewImage })
     };
 
@@ -166,11 +168,52 @@ const PostForm: React.FC<PostFormProps> = ({ onSubmit, postCount }) => {
               ref={inputRef}
               rows={4}
               className="w-full bg-gray-800 text-white rounded px-3 py-2 focus:outline-none focus:ring-1 focus:ring-cyan-500 border border-gray-700 font-mono"
-              placeholder="まよったら書き込んでください（Ctrl+Enterで送信）"
+              placeholder={
+                dialectType === 'kansai' ? "なんか書いてみようやぁ～（Ctrl+Enterで送信やで）" :
+                dialectType === 'space' ? "✧✧✧っぽ✧彡✧宇宙語でっぽ✧彡✧✧（Ctrl+Enter✧彡）" :
+                "投稿内容をご入力ください（Ctrl+Enterで送信）"
+              }
               value={newPost}
               onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setNewPost(e.target.value)}
               onKeyDown={handleKeyPress}
             />
+          </div>
+
+          {/* Dialect selector */}
+          <div className="mb-3">
+            <div className="text-xs text-gray-400 mb-1">投稿スタイル：</div>
+            <div className="flex space-x-2">
+              <button
+                className={`px-3 py-1 text-sm rounded-full transition ${
+                  dialectType === 'kansai' 
+                    ? 'bg-indigo-600 text-white' 
+                    : 'bg-gray-800 text-cyan-300 hover:bg-gray-700'
+                }`}
+                onClick={() => setDialectType('kansai')}
+              >
+                関西弁
+              </button>
+              <button
+                className={`px-3 py-1 text-sm rounded-full transition ${
+                  dialectType === 'space' 
+                    ? 'bg-purple-600 text-white' 
+                    : 'bg-gray-800 text-cyan-300 hover:bg-gray-700'
+                }`}
+                onClick={() => setDialectType('space')}
+              >
+                宇宙語
+              </button>
+              <button
+                className={`px-3 py-1 text-sm rounded-full transition ${
+                  dialectType === 'normal' 
+                    ? 'bg-cyan-600 text-white' 
+                    : 'bg-gray-800 text-cyan-300 hover:bg-gray-700'
+                }`}
+                onClick={() => setDialectType('normal')}
+              >
+                通常
+              </button>
+            </div>
           </div>
 
           {/* Preview display */}
@@ -221,7 +264,9 @@ const PostForm: React.FC<PostFormProps> = ({ onSubmit, postCount }) => {
               disabled={!newPost.trim()}
             >
               <span className="flex items-center">
-                書き込む
+                {dialectType === 'kansai' ? '書き込むでぇ～' :
+                 dialectType === 'space' ? '✧彡送信っぽ✧彡' :
+                 '書き込む'}
               </span>
             </button>
           </div>

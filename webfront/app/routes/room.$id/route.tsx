@@ -76,6 +76,7 @@ const CosmicForumPage: React.FC = () => {
             timestamp: data.createdAt instanceof Timestamp ? data.createdAt.toDate() : new Date(),
             likes: 0, // Initialize likes to 0 since it's not in Firebase schema
             messageType: data.messageType || 'text',
+            dialect_type: data.dialect_type || 'kansai', // Default to kansai if not specified
             image: data.messageType === 'image' ? data.text : undefined // If message type is image, use text field as image URL
           };
         });
@@ -113,6 +114,7 @@ const CosmicForumPage: React.FC = () => {
         senderId: newPostObj.username, // Using username as senderId for simplicity
         createdAt: serverTimestamp(),
         messageType: newPostObj.image ? 'image' : 'text',
+        dialect_type: newPostObj.dialect_type || 'kansai', // Save the selected dialect type
         ...(newPostObj.image && { imageUrl: newPostObj.image }), // Add image URL if present
       });
       
@@ -200,8 +202,6 @@ const CosmicForumPage: React.FC = () => {
       {/* Post form */}
       <PostForm onSubmit={handleCreatePost} postCount={posts.length} />
       
-      {/* Footer */}
-      <Footer />
     </div>
   );
 };

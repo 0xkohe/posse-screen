@@ -9,6 +9,7 @@ export interface Post {
   image?: string;
   avatar?: string;
   messageType?: 'text' | 'image' | 'system';
+  dialect_type?: 'kansai' | 'space' | 'normal';
 }
 
 export interface PostProps {
@@ -30,4 +31,5 @@ export interface Message {
   createdAt: Date;
   messageType: 'text' | 'image' | 'system';
   seenBy?: string[];
+  dialect_type?: 'kansai' | 'space' | 'normal';
 }

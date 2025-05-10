@@ -5,6 +5,36 @@ import type { PostProps } from './types';
 const Post: React.FC<PostProps> = ({ post }) => {
   const [showActions, setShowActions] = useState<boolean>(false);
 
+  // Function to render text based on dialect type
+  const renderDialectText = () => {
+    if (!post.text) return '';
+
+    switch (post.dialect_type) {
+      case 'kansai':
+        return (
+          <p className="text-gray-100 whitespace-pre-line break-words">
+            <span className="text-yellow-400 text-xs font-bold mr-1">[関西弁]</span>
+            {post.text}
+          </p>
+        );
+      case 'space':
+        return (
+          <p className="text-gray-100 whitespace-pre-line break-words">
+            <span className="text-purple-400 text-xs font-bold mr-1">[宇宙語]</span>
+            <span className="font-mono">{post.text.split('').join('✧')}</span>
+          </p>
+        );
+      case 'normal':
+      default:
+        return (
+          <p className="text-gray-100 whitespace-pre-line break-words">
+            {post.dialect_type === 'normal' && <span className="text-cyan-400 text-xs font-bold mr-1">[通常]</span>}
+            {post.text}
+          </p>
+        );
+    }
+  };
+
   return (
     <div
       className="mb-4 bg-gray-900 border border-indigo-900 rounded-lg overflow-hidden shadow-lg transform transition-all hover:scale-[1.01] hover:shadow-indigo-900/20"
@@ -57,7 +87,7 @@ const Post: React.FC<PostProps> = ({ post }) => {
           ))}
         </div>
 
-        <p className="text-gray-100 whitespace-pre-line break-words">{post.text}</p>
+        {renderDialectText()}
 
         {post.image && (
           <div className="mt-3 rounded overflow-hidden inline-block">
