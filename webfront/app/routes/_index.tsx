@@ -138,7 +138,7 @@ export default function Home() {
       </div>
       
       {/* CSSアニメーション */}
-      <style jsx>{`
+      <style>{`
         @keyframes twinkle {
           0% { opacity: 0.3; }
           100% { opacity: 1; }
