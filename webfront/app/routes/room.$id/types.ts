@@ -21,7 +21,6 @@ export interface Room {
   name: string;
   createdAt: Date;
   createdBy: string;
-  participants: string[];
 }
 
 export interface Message {
